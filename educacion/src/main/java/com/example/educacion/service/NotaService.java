@@ -15,15 +15,15 @@ public class NotaService {
     @Autowired
     private NotaRepository notaRepository;
 
-    public Nota guardar(Nota nota){
+    public Nota guardar(Nota nota) {
         return notaRepository.save(nota);
     }
 
-    public List<Nota> listar(){
+    public List<Nota> listar() {
         return notaRepository.findAll();
     }
 
-    public List<Nota> listarPorEstudiante(Long id){
+    public List<Nota> listarPorEstudiante(Long id) {
         return notaRepository.buscarPorEstudiante(id);
     }
 }
