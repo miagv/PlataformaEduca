@@ -18,7 +18,7 @@ export default function CursosPage() {
     cargarCursos,
     guardarCurso,
     eliminarCurso,
-  } = useCursos();
+  } = useCursos({ misCursos: user?.rol === ROLES.DOCENTE });
 
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -101,7 +101,7 @@ export default function CursosPage() {
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">
+              <h1 className="text-3xl font-bold text-[#012169]">
                 Gestión de cursos
               </h1>
 
@@ -116,7 +116,7 @@ export default function CursosPage() {
           <button
             type="button"
             onClick={abrirNuevoCurso}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#012169] px-5 py-3 font-semibold text-white transition hover:bg-blue-900"
           >
             <FiPlus size={20} />
             Nuevo curso
@@ -173,7 +173,7 @@ export default function CursosPage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar por nombre o descripción..."
-            className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 outline-none transition focus:border-[#012169] focus:ring-4 focus:ring-blue-100"
           />
         </div>
 

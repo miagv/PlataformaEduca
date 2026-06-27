@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 export default function NotaForm({
   estudiantes,
   evaluaciones,
+  dataLoading,
   onSubmit,
   onCancel,
   loading,
@@ -32,7 +33,7 @@ export default function NotaForm({
       nota: "",
       observacion: "",
     });
-  }, [reset]);
+  }, [reset, estudiantes, evaluaciones]);
 
   const evaluacionSeleccionada = evaluaciones.find(
     (evaluacion) =>
@@ -228,9 +229,9 @@ export default function NotaForm({
         <button
           type="submit"
           disabled={
-            loading || estudiantes.length === 0 || evaluaciones.length === 0
+            loading || dataLoading || estudiantes.length === 0 || evaluaciones.length === 0
           }
-          className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
+          className="rounded-xl bg-[#012169] px-5 py-3 font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-blue-400"
         >
           {loading ? "Registrando..." : "Registrar nota"}
         </button>

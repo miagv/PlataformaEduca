@@ -8,7 +8,7 @@ import {
 
 import { useAuth } from "../../auth/hooks/useAuth";
 import { ROLES } from "../../../utils/roles";
-import { getCursos } from "../../cursos/services/cursoService";
+import { getSalones } from "../../../api/salonService";
 
 import EvaluacionModal from "../components/EvaluacionModal";
 import EvaluacionesTable from "../components/EvaluacionesTable";
@@ -26,11 +26,9 @@ export default function EvaluacionesPage() {
     cargarEvaluaciones,
     guardarEvaluacion,
     eliminarEvaluacion,
-  } = useEvaluaciones();
+  } = useEvaluaciones({ misEvaluaciones: user?.rol === ROLES.DOCENTE });
 
-  const [cursos, setCursos] = useState([]);
-  const [loadingCursos, setLoadingCursos] = useState(false);
-  const [errorCursos, setErrorCursos] = useState("");
+  const [salones, setSalones] = useState([]);
 
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -41,25 +39,10 @@ export default function EvaluacionesPage() {
   const canManage =
     user?.rol === ROLES.ADMIN || user?.rol === ROLES.DOCENTE;
 
-  const cargarCursos = async () => {
-    try {
-      setLoadingCursos(true);
-      setErrorCursos("");
-
-      const data = await getCursos();
-      setCursos(data);
-    } catch (err) {
-      setErrorCursos(
-        err.response?.data ||
-          "No se pudieron cargar los cursos para el formulario."
-      );
-    } finally {
-      setLoadingCursos(false);
-    }
-  };
-
   useEffect(() => {
-    cargarCursos();
+    getSalones()
+      .then((data) => setSalones(data))
+      .catch(() => {});
   }, []);
 
   const evaluacionesFiltradas = useMemo(() => {
@@ -128,10 +111,16 @@ export default function EvaluacionesPage() {
     }
   };
 
-  const totalPorcentaje = evaluaciones.reduce(
-    (total, evaluacion) => total + Number(evaluacion.porcentaje || 0),
-    0
-  );
+  const evaluacionesEsteMes = useMemo(() => {
+    const now = new Date();
+    return evaluaciones.filter((e) => {
+      const fecha = new Date(e.fecha);
+      return (
+        fecha.getMonth() === now.getMonth() &&
+        fecha.getFullYear() === now.getFullYear()
+      );
+    }).length;
+  }, [evaluaciones]);
 
   return (
     <section>
@@ -142,7 +131,7 @@ export default function EvaluacionesPage() {
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">
+            <h1 className="text-3xl font-bold text-[#012169]">
               Gestión de evaluaciones
             </h1>
 
@@ -156,8 +145,7 @@ export default function EvaluacionesPage() {
           <button
             type="button"
             onClick={abrirNuevaEvaluacion}
-            disabled={loadingCursos}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3 font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-violet-400"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#012169] px-5 py-3 font-semibold text-white transition hover:bg-blue-900"
           >
             <FiPlus size={20} />
             Nueva evaluación
@@ -192,10 +180,10 @@ export default function EvaluacionesPage() {
 
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">
-            Porcentaje acumulado
+            Evaluaciones este mes
           </p>
           <p className="mt-2 text-3xl font-bold text-blue-600">
-            {totalPorcentaje.toFixed(2)}%
+            {evaluacionesEsteMes}
           </p>
         </article>
       </div>
@@ -206,9 +194,9 @@ export default function EvaluacionesPage() {
         </div>
       )}
 
-      {(error || errorCursos) && (
+      {error && (
         <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {error || errorCursos}
+          {error}
         </div>
       )}
 
@@ -227,15 +215,12 @@ export default function EvaluacionesPage() {
 
         <button
           type="button"
-          onClick={() => {
-            cargarEvaluaciones();
-            cargarCursos();
-          }}
-          disabled={loading || loadingCursos}
+          onClick={cargarEvaluaciones}
+          disabled={loading}
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed"
         >
           <FiRefreshCw
-            className={loading || loadingCursos ? "animate-spin" : ""}
+            className={loading ? "animate-spin" : ""}
             size={18}
           />
           Actualizar
@@ -260,7 +245,7 @@ export default function EvaluacionesPage() {
       <EvaluacionModal
         open={modalOpen}
         evaluacionSeleccionada={evaluacionSeleccionada}
-        cursos={cursos}
+        salones={salones}
         onClose={cerrarModal}
         onSubmit={handleGuardarEvaluacion}
         loading={actionLoading}

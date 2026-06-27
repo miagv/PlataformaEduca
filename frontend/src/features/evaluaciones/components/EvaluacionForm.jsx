@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 export default function EvaluacionForm({
   evaluacionSeleccionada,
   cursos,
+  cursosLoading,
   onSubmit,
   onCancel,
   loading,
@@ -196,9 +197,15 @@ export default function EvaluacionForm({
           <p className="mt-1 text-sm text-red-600">{errors.cursoId.message}</p>
         )}
 
-        {cursos.length === 0 && (
+        {cursosLoading && (
+          <p className="mt-2 text-sm text-slate-500">
+            Cargando cursos...
+          </p>
+        )}
+
+        {!cursosLoading && cursos.length === 0 && (
           <p className="mt-2 text-sm text-amber-600">
-            No hay cursos disponibles. Primero debes registrar un curso.
+            No hay cursos asignados a este salón.
           </p>
         )}
       </div>
@@ -215,8 +222,8 @@ export default function EvaluacionForm({
 
         <button
           type="submit"
-          disabled={loading || cursos.length === 0}
-          className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
+          disabled={loading || cursosLoading || cursos.length === 0}
+          className="rounded-xl bg-[#012169] px-5 py-3 font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-blue-400"
         >
           {loading
             ? "Guardando..."

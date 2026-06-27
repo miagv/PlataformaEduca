@@ -3,10 +3,11 @@ import {
   createEvaluacion,
   deleteEvaluacion,
   getEvaluaciones,
+  getMisEvaluaciones,
   updateEvaluacion,
 } from "../services/evaluacionService";
 
-export function useEvaluaciones() {
+export function useEvaluaciones({ misEvaluaciones = false } = {}) {
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -17,7 +18,7 @@ export function useEvaluaciones() {
       setLoading(true);
       setError("");
 
-      const data = await getEvaluaciones();
+      const data = misEvaluaciones ? await getMisEvaluaciones() : await getEvaluaciones();
       setEvaluaciones(data);
     } catch (err) {
       setError(
@@ -27,7 +28,7 @@ export function useEvaluaciones() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [misEvaluaciones]);
 
   useEffect(() => {
     cargarEvaluaciones();

@@ -3,10 +3,11 @@ import {
   createCurso,
   deleteCurso,
   getCursos,
+  getMisCursos,
   updateCurso,
 } from "../services/cursoService";
 
-export function useCursos() {
+export function useCursos({ misCursos = false } = {}) {
   const [cursos, setCursos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -17,7 +18,7 @@ export function useCursos() {
       setLoading(true);
       setError("");
 
-      const data = await getCursos();
+      const data = misCursos ? await getMisCursos() : await getCursos();
       setCursos(data);
     } catch (err) {
       setError(
@@ -27,7 +28,7 @@ export function useCursos() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [misCursos]);
 
   useEffect(() => {
     cargarCursos();

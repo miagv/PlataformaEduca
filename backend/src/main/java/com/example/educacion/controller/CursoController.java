@@ -5,13 +5,13 @@ import com.example.educacion.service.CursoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/cursos")
-@CrossOrigin("*")
 public class CursoController {
 
     @Autowired
@@ -20,6 +20,12 @@ public class CursoController {
     @GetMapping
     public ResponseEntity<List<Curso>> listar(){
         return ResponseEntity.ok(cursoService.listar());
+    }
+
+    @GetMapping("/mis-cursos")
+    public ResponseEntity<List<Curso>> listarMisCursos() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(cursoService.listarMisCursos(email));
     }
 
     @PostMapping

@@ -9,8 +9,7 @@ import {
 import { useAuth } from "../../auth/hooks/useAuth";
 import { ROLES } from "../../../utils/roles";
 
-import { getEstudiantes } from "../../estudiantes/services/estudianteService";
-import { getEvaluaciones } from "../../evaluaciones/services/evaluacionService";
+import { getSalones } from "../../../api/salonService";
 
 import NotaModal from "../components/NotaModal";
 import NotasTable from "../components/NotasTable";
@@ -28,50 +27,26 @@ export default function NotasPage() {
     guardarNota,
   } = useNotas();
 
-  const [estudiantes, setEstudiantes] = useState([]);
-  const [evaluaciones, setEvaluaciones] = useState([]);
-  const [loadingData, setLoadingData] = useState(false);
-  const [errorData, setErrorData] = useState("");
-
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  const [salones, setSalones] = useState([]);
+  const [salonFilter, setSalonFilter] = useState("");
+
   const canManage =
     user?.rol === ROLES.ADMIN || user?.rol === ROLES.DOCENTE;
 
-  const cargarDatosFormulario = async () => {
-    try {
-      setLoadingData(true);
-      setErrorData("");
-
-      const [estudiantesData, evaluacionesData] = await Promise.all([
-        getEstudiantes(),
-        getEvaluaciones(),
-      ]);
-
-      setEstudiantes(estudiantesData);
-      setEvaluaciones(evaluacionesData);
-    } catch (err) {
-      setErrorData(
-        err.response?.data ||
-          "No se pudieron cargar estudiantes o evaluaciones."
-      );
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
   useEffect(() => {
-    cargarDatosFormulario();
+    getSalones()
+      .then((data) => setSalones(data))
+      .catch(() => {});
   }, []);
 
   const notasFiltradas = useMemo(() => {
-    const term = search.trim().toLowerCase();
-
-    if (!term) return notas;
-
     return notas.filter((nota) => {
+      const term = search.trim().toLowerCase();
+
       const estudiante = `${nota.estudiante?.usuario?.nombres || ""} ${
         nota.estudiante?.usuario?.apellidos || ""
       }`.toLowerCase();
@@ -80,14 +55,14 @@ export default function NotasPage() {
       const evaluacion = nota.evaluacion?.titulo?.toLowerCase() || "";
       const curso = nota.evaluacion?.curso?.nombre?.toLowerCase() || "";
 
-      return (
-        estudiante.includes(term) ||
-        codigo.includes(term) ||
-        evaluacion.includes(term) ||
-        curso.includes(term)
-      );
+      const matchesSearch = !term || estudiante.includes(term) || codigo.includes(term) || evaluacion.includes(term) || curso.includes(term);
+
+      const salonId = nota.estudiante?.salon?.id?.toString() || "";
+      const matchesSalon = !salonFilter || salonId === salonFilter;
+
+      return matchesSearch && matchesSalon;
     });
-  }, [notas, search]);
+  }, [notas, search, salonFilter]);
 
   const abrirModal = () => {
     setSuccessMessage("");
@@ -127,7 +102,7 @@ export default function NotasPage() {
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">
+            <h1 className="text-3xl font-bold text-[#012169]">
               Registro de notas
             </h1>
 
@@ -141,7 +116,6 @@ export default function NotasPage() {
           <button
             type="button"
             onClick={abrirModal}
-            disabled={loadingData}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-400"
           >
             <FiPlus size={20} />
@@ -185,36 +159,43 @@ export default function NotasPage() {
         </div>
       )}
 
-      {(error || errorData) && (
+      {error && (
         <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {error || errorData}
+          {error}
         </div>
       )}
 
-      <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-md">
+      <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+        <div className="relative w-full sm:max-w-xs">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-
           <input
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por estudiante, evaluación o curso..."
-            className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+            placeholder="Buscar por estudiante..."
+            className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 outline-none transition focus:border-[#012169] focus:ring-4 focus:ring-blue-100"
           />
         </div>
 
+        <select
+          value={salonFilter}
+          onChange={(e) => setSalonFilter(e.target.value)}
+          className="w-full sm:w-48 rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-[#012169] focus:ring-4 focus:ring-blue-100"
+        >
+          <option value="">Todos los salones</option>
+          {salones.map((s) => (
+            <option key={s.id} value={s.id}>{s.grado} &quot;{s.seccion}&quot;</option>
+          ))}
+        </select>
+
         <button
           type="button"
-          onClick={() => {
-            cargarNotas();
-            cargarDatosFormulario();
-          }}
-          disabled={loading || loadingData}
+          onClick={cargarNotas}
+          disabled={loading}
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed"
         >
           <FiRefreshCw
-            className={loading || loadingData ? "animate-spin" : ""}
+            className={loading ? "animate-spin" : ""}
             size={18}
           />
           Actualizar
@@ -233,8 +214,7 @@ export default function NotasPage() {
 
       <NotaModal
         open={modalOpen}
-        estudiantes={estudiantes}
-        evaluaciones={evaluaciones}
+        salones={salones}
         onClose={cerrarModal}
         onSubmit={handleGuardarNota}
         loading={actionLoading}

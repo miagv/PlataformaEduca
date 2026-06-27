@@ -19,3 +19,13 @@ export async function deleteEvaluacion(id) {
   const response = await axiosClient.delete(`/evaluaciones/${id}`);
   return response.data;
 }
+
+export async function getEvaluacionesPorSalon(salonId) {
+  const response = await axiosClient.get(`/evaluaciones/salon/${salonId}`);
+  return response.data;
+}
+
+export async function getMisEvaluaciones() {
+  const response = await axiosClient.get("/evaluaciones/mis-evaluaciones");
+  return response.data;
+}

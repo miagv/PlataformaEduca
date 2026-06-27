@@ -27,4 +27,8 @@ public class Estudiante {
     @OneToMany(mappedBy = "estudiante", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Nota> notas;
+
+    @ManyToOne
+    @JoinColumn(name = "salon_id")
+    private Salon salon;
 }

@@ -7,6 +7,8 @@ import {
   FiHome,
   FiLayers,
   FiUsers,
+  FiGrid,
+  FiShield,
 } from "react-icons/fi";
 
 import { ROLES } from "../utils/roles";
@@ -19,22 +21,16 @@ export const navigationItems = [
     roles: [ROLES.ADMIN, ROLES.DOCENTE, ROLES.ESTUDIANTE],
   },
   {
+    label: "Salones",
+    path: "/salones",
+    icon: FiGrid,
+    roles: [ROLES.ADMIN, ROLES.DOCENTE],
+  },
+  {
     label: "Gestión de cursos",
     path: "/cursos",
     icon: FiBookOpen,
     roles: [ROLES.ADMIN, ROLES.DOCENTE],
-  },
-  {
-    label: "Gestión de docentes",
-    path: "/docentes",
-    icon: FiUsers,
-    roles: [ROLES.ADMIN],
-  },
-  {
-    label: "Gestión de estudiantes",
-    path: "/estudiantes",
-    icon: FiUsers,
-    roles: [ROLES.ADMIN],
   },
   {
     label: "Evaluaciones",
@@ -47,6 +43,24 @@ export const navigationItems = [
     path: "/notas",
     icon: FiEdit3,
     roles: [ROLES.ADMIN, ROLES.DOCENTE],
+  },
+  {
+    label: "Gestión de docentes",
+    path: "/docentes",
+    icon: FiUsers,
+    roles: [ROLES.ADMIN],
+  },
+  {
+    label: "Gestión de estudiantes",
+    path: "/estudiantes",
+    icon: FiUsers,
+    roles: [ROLES.ADMIN, ROLES.DOCENTE],
+  },
+  {
+    label: "Coordinadores",
+    path: "/coordinadores",
+    icon: FiShield,
+    roles: [ROLES.ADMIN],
   },
   {
     label: "Reportes",

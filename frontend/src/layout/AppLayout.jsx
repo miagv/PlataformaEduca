@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
-
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
@@ -8,7 +7,7 @@ export default function AppLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
       <Sidebar
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}

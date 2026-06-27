@@ -3,7 +3,7 @@ import { useAuth } from "../features/auth/hooks/useAuth";
 import LoadingScreen from "../common/LoadingScreen";
 
 export default function ProtectedRoute() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loadingAuth: loading } = useAuth();
   const location = useLocation();
 
   if (loading) {

@@ -1,14 +1,45 @@
+import { useState, useEffect } from "react";
 import { FiX } from "react-icons/fi";
 import EvaluacionForm from "./EvaluacionForm";
+import { getCursosPorSalon } from "../../../api/salonService";
 
 export default function EvaluacionModal({
   open,
   evaluacionSeleccionada,
-  cursos,
+  salones,
   onClose,
   onSubmit,
   loading,
 }) {
+  const [selectedSalonId, setSelectedSalonId] = useState("");
+  const [cursos, setCursos] = useState([]);
+  const [cursosLoading, setCursosLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedSalonId || evaluacionSeleccionada) {
+      setCursos([]);
+      return;
+    }
+    (async () => {
+      try {
+        setCursosLoading(true);
+        const data = await getCursosPorSalon(Number(selectedSalonId));
+        setCursos(data || []);
+      } catch {
+        setCursos([]);
+      } finally {
+        setCursosLoading(false);
+      }
+    })();
+  }, [selectedSalonId, evaluacionSeleccionada]);
+
+  useEffect(() => {
+    if (!open) {
+      setSelectedSalonId("");
+      setCursos([]);
+    }
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -45,9 +76,36 @@ export default function EvaluacionModal({
           </button>
         </div>
 
+        {!evaluacionSeleccionada && (
+          <div className="mb-5">
+            <label
+              htmlFor="modalSalonId"
+              className="mb-2 block text-sm font-semibold text-slate-700"
+            >
+              Salón
+            </label>
+
+            <select
+              id="modalSalonId"
+              value={selectedSalonId}
+              onChange={(e) => setSelectedSalonId(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#012169] focus:ring-4 focus:ring-blue-100"
+            >
+              <option value="">Selecciona un salón</option>
+
+              {salones.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.grado} &quot;{s.seccion}&quot;
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <EvaluacionForm
           evaluacionSeleccionada={evaluacionSeleccionada}
           cursos={cursos}
+          cursosLoading={cursosLoading}
           onSubmit={onSubmit}
           onCancel={onClose}
           loading={loading}

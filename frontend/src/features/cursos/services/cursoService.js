@@ -19,3 +19,8 @@ export async function deleteCurso(id) {
   const response = await axiosClient.delete(`/cursos/${id}`);
   return response.data;
 }
+
+export async function getMisCursos() {
+  const response = await axiosClient.get("/cursos/mis-cursos");
+  return response.data;
+}

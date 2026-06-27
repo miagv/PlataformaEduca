@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { FiBarChart2, FiDownload, FiRefreshCw } from "react-icons/fi";
 
-import LoadingScreen from "../../../components/common/LoadingScreen";
-import ErrorMessage from "../../../components/common/ErrorMessage";
+import LoadingScreen from "../../../common/LoadingScreen";
+import ErrorMessage from "../../../common/ErrorMessage";
 
 import { getDashboardData } from "../../dashboard/services/dashboardService";
 import {
@@ -100,7 +100,7 @@ export default function ReportesPage() {
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
+              <h1 className="text-2xl font-bold text-[#012169]">
                 Reportes académicos
               </h1>
 

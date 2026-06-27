@@ -25,6 +25,18 @@ public class DocenteService {
         return docenteRepository.findById(id).orElse(null);
     }
 
+    public Docente actualizar(Long id, String especialidad, String nombres, String apellidos, String email) {
+        Docente docente = buscar(id);
+        if (docente != null) {
+            if (especialidad != null) docente.setEspecialidad(especialidad);
+            if (nombres != null) docente.getUsuario().setNombres(nombres);
+            if (apellidos != null) docente.getUsuario().setApellidos(apellidos);
+            if (email != null) docente.getUsuario().setEmail(email);
+            return docenteRepository.save(docente);
+        }
+        return null;
+    }
+
     public void eliminar(Long id) {
         Docente docente = buscar(id);
         if (docente != null) {

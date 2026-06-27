@@ -51,6 +51,7 @@ export function AuthProvider({ children }) {
       apellidos: data.apellidos,
       email: data.email,
       rol: data.rol,
+      estudianteId: data.estudianteId,
     };
 
     localStorage.setItem("token", data.token);

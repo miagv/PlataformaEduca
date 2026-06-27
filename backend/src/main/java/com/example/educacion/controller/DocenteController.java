@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/docentes")
-@CrossOrigin("*")
 public class DocenteController {
 
     @Autowired
@@ -34,6 +33,14 @@ public class DocenteController {
         Docente docenteDB = docenteService.buscar(id);
         if (docenteDB != null) {
             docenteDB.setEspecialidad(docente.getEspecialidad());
+            if (docente.getUsuario() != null) {
+                if (docente.getUsuario().getNombres() != null)
+                    docenteDB.getUsuario().setNombres(docente.getUsuario().getNombres());
+                if (docente.getUsuario().getApellidos() != null)
+                    docenteDB.getUsuario().setApellidos(docente.getUsuario().getApellidos());
+                if (docente.getUsuario().getEmail() != null)
+                    docenteDB.getUsuario().setEmail(docente.getUsuario().getEmail());
+            }
             return ResponseEntity.ok(docenteService.guardar(docenteDB));
         }
         return ResponseEntity.notFound().build();

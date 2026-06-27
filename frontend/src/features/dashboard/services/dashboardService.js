@@ -1,13 +1,13 @@
-import api from "../../../services/api";
+import axiosClient from "../../../api/axiosClient";
 
 export async function getDashboardData() {
   const [cursosRes, estudiantesRes, docentesRes, evaluacionesRes, notasRes] =
     await Promise.all([
-      api.get("/cursos"),
-      api.get("/estudiantes"),
-      api.get("/docentes"),
-      api.get("/evaluaciones"),
-      api.get("/notas"),
+      axiosClient.get("/cursos"),
+      axiosClient.get("/estudiantes"),
+      axiosClient.get("/docentes"),
+      axiosClient.get("/evaluaciones"),
+      axiosClient.get("/notas"),
     ]);
 
   return {

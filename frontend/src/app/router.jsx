@@ -1,12 +1,13 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
-import AppLayout from "../components/layout/AppLayout";
-import NotFoundPage from "../components/common/NotFoundPage";
-import ProtectedRoute from "../components/guards/ProtectedRoute";
-import RoleRoute from "../components/guards/RoleRoute";
+import AppLayout from "../layout/AppLayout";
+import NotFoundPage from "../common/NotFoundPage";
+import ProtectedRoute from "../guards/ProtectedRoute";
+import RoleRoute from "../guards/RoleRoute";
 
 import LoginPage from "../features/auth/pages/LoginPage";
-import RegisterPage from "../features/auth/pages/RegisterPage";
+import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
+import ResetPasswordPage from "../features/auth/pages/ResetPasswordPage";
 
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import CursosPage from "../features/cursos/pages/CursosPage";
@@ -15,71 +16,52 @@ import EstudiantesPage from "../features/estudiantes/pages/EstudiantesPage";
 import EvaluacionesPage from "../features/evaluaciones/pages/EvaluacionesPage";
 import NotasPage from "../features/notas/pages/NotasPage";
 import ReportesPage from "../features/reportes/pages/ReportesPage";
+import SalonesPage from "../features/salones/pages/SalonesPage";
+import CoordinadoresPage from "../features/coordinadores/pages/CoordinadoresPage";
 
 import ComingSoonPage from "../features/shared/pages/ComingSoonPage";
 
 import { ROLES } from "../utils/roles";
 
 const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/registro",
-    element: <RegisterPage />,
-  },
+  // Public routes (no auth required)
+  { path: "/login", element: <LoginPage /> },
+  { path: "/recuperar-contrasena", element: <ForgotPasswordPage /> },
+  { path: "/restablecer-contrasena", element: <ResetPasswordPage /> },
+
+  // Protected routes (auth required)
   {
     element: <ProtectedRoute />,
     children: [
       {
         element: <AppLayout />,
         children: [
-          {
-            path: "/",
-            element: <Navigate to="/dashboard" replace />,
-          },
-          {
-            path: "/dashboard",
-            element: <DashboardPage />,
-          },
+          { path: "/", element: <Navigate to="/dashboard" replace /> },
+          { path: "/dashboard", element: <DashboardPage /> },
 
+          // Routes for ADMIN + DOCENTE
           {
             element: <RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.DOCENTE]} />,
             children: [
-              {
-                path: "/cursos",
-                element: <CursosPage />,
-              },
-              {
-                path: "/evaluaciones",
-                element: <EvaluacionesPage />,
-              },
-              {
-                path: "/notas",
-                element: <NotasPage />,
-              },
-              {
-  path: "/reportes",
-  element: <ReportesPage />,
-},
+              { path: "/cursos", element: <CursosPage /> },
+              { path: "/evaluaciones", element: <EvaluacionesPage /> },
+              { path: "/notas", element: <NotasPage /> },
+              { path: "/reportes", element: <ReportesPage /> },
+              { path: "/salones", element: <SalonesPage /> },
+              { path: "/estudiantes", element: <EstudiantesPage /> },
             ],
           },
 
+          // Routes for ADMIN only
           {
             element: <RoleRoute allowedRoles={[ROLES.ADMIN]} />,
             children: [
-              {
-                path: "/docentes",
-                element: <DocentesPage />,
-              },
-              {
-                path: "/estudiantes",
-                element: <EstudiantesPage />,
-              },
+              { path: "/docentes", element: <DocentesPage /> },
+              { path: "/coordinadores", element: <CoordinadoresPage /> },
             ],
           },
 
+          // Routes for ESTUDIANTE only
           {
             element: <RoleRoute allowedRoles={[ROLES.ESTUDIANTE]} />,
             children: [
@@ -107,10 +89,8 @@ const router = createBrowserRouter([
       },
     ],
   },
-  {
-    path: "*",
-    element: <NotFoundPage />,
-  },
+
+  { path: "*", element: <NotFoundPage /> },
 ]);
 
 export default router;

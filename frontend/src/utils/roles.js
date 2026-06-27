@@ -10,6 +10,12 @@ export const ROLE_LABELS = {
   [ROLES.ESTUDIANTE]: "Estudiante",
 };
 
+export const HOME_BY_ROLE = {
+  [ROLES.ADMIN]: "/dashboard",
+  [ROLES.DOCENTE]: "/dashboard",
+  [ROLES.ESTUDIANTE]: "/dashboard",
+};
+
 export function hasRole(user, allowedRoles = []) {
   if (!user?.rol) return false;
 

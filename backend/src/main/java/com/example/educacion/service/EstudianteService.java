@@ -17,6 +17,14 @@ public class EstudianteService {
         return estudianteRepository.findAll();
     }
 
+    public List<Estudiante> listarPorSalon(Long salonId) {
+        return estudianteRepository.findBySalonId(salonId);
+    }
+
+    public List<Estudiante> listarSinSalon() {
+        return estudianteRepository.findBySalonIsNull();
+    }
+
     public Estudiante guardar(Estudiante estudiante) {
         return estudianteRepository.save(estudiante);
     }
