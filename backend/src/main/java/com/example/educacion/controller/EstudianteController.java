@@ -7,6 +7,7 @@ import com.example.educacion.service.SalonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,12 @@ public class EstudianteController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DOCENTE')")
     public ResponseEntity<List<Estudiante>> listarSinSalon() {
         return ResponseEntity.ok(estudianteService.listarSinSalon());
+    }
+
+    @GetMapping("/mis-estudiantes")
+    public ResponseEntity<List<Estudiante>> listarMisEstudiantes() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(estudianteService.listarMisEstudiantes(email));
     }
 
     @GetMapping("/{id}")

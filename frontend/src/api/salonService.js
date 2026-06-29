@@ -35,6 +35,11 @@ export async function getReporteSalon(salonId) {
   return response.data;
 }
 
+export async function getReporteMisCursos(salonId) {
+  const response = await axiosClient.get(`/salones/${salonId}/reporte/mis-cursos`);
+  return response.data;
+}
+
 export async function createCargaHoraria(salonId, data) {
   const response = await axiosClient.post(`/salones/${salonId}/carga-horaria`, data);
   return response.data;

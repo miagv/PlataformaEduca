@@ -18,10 +18,10 @@ import RecentEvaluations from "../components/RecentEvaluations";
 import PerformanceSummary from "../components/PerformanceSummary";
 
 import { getDashboardData } from "../services/dashboardService";
-import { getSalones, getCursosPorSalon } from "../../../api/salonService";
-import { getEstudiante } from "../../estudiantes/services/estudianteService";
-import { getEvaluacionesPorSalon } from "../../evaluaciones/services/evaluacionService";
-import { getNotasPorEstudiante } from "../../notas/services/notaService";
+import { getSalones, getMisSalones, getCursosPorSalon } from "../../../api/salonService";
+import { getEstudiante, getEstudiantesPorSalon } from "../../estudiantes/services/estudianteService";
+import { getEvaluacionesPorSalon, getMisEvaluaciones } from "../../evaluaciones/services/evaluacionService";
+import { getNotasPorEstudiante, getMisNotas } from "../../notas/services/notaService";
 
 import {
   getApprovedPercentage,
@@ -35,7 +35,9 @@ import { ROLES } from "../../../utils/roles";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const isStudent = user?.rol === ROLES.ESTUDIANTE;
+  const rol = user?.rol;
+  const isStudent = rol === ROLES.ESTUDIANTE;
+  const isDocente = rol === ROLES.DOCENTE;
 
   const [dashboardData, setDashboardData] = useState({
     cursos: [],
@@ -51,6 +53,13 @@ export default function DashboardPage() {
     evaluaciones: [],
   });
 
+  const [docenteData, setDocenteData] = useState({
+    cursos: [],
+    estudiantes: [],
+    evaluaciones: [],
+    notas: [],
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [salones, setSalones] = useState([]);
@@ -59,18 +68,20 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isStudent) {
       loadStudentData();
+    } else if (isDocente) {
+      loadDocenteData();
     } else {
       loadDashboardData();
     }
-  }, [isStudent]);
+  }, [isStudent, isDocente]);
 
   useEffect(() => {
-    if (!isStudent) {
-      getSalones()
-        .then((data) => setSalones(data))
-        .catch(() => {});
-    }
-  }, [isStudent]);
+    if (isStudent) return;
+    const loadSalones = isDocente ? getMisSalones : getSalones;
+    loadSalones()
+      .then((data) => setSalones(data))
+      .catch(() => {});
+  }, [isStudent, isDocente]);
 
   async function loadStudentData() {
     try {
@@ -111,6 +122,54 @@ export default function DashboardPage() {
     }
   }
 
+  async function loadDocenteData() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const [misSalones, evaluaciones, notas] = await Promise.all([
+        getMisSalones(),
+        getMisEvaluaciones(),
+        getMisNotas(),
+      ]);
+
+      const salonesValidos = Array.isArray(misSalones) ? misSalones : [];
+
+      const cursosUnicos = new Map();
+      const estudiantesUnicos = new Map();
+
+      if (salonesValidos.length > 0) {
+        const results = await Promise.all(
+          salonesValidos.map((s) =>
+            Promise.all([
+              getCursosPorSalon(s.id),
+              getEstudiantesPorSalon(s.id),
+            ])
+          )
+        );
+
+        results.forEach(([cursos, estudiantes]) => {
+          (cursos || []).forEach((c) => cursosUnicos.set(c.id, c));
+          (estudiantes || []).forEach((e) => estudiantesUnicos.set(e.id, e));
+        });
+      }
+
+      setDocenteData({
+        cursos: [...cursosUnicos.values()],
+        estudiantes: [...estudiantesUnicos.values()],
+        evaluaciones: Array.isArray(evaluaciones) ? evaluaciones : [],
+        notas: Array.isArray(notas) ? notas : [],
+      });
+    } catch (err) {
+      setError(
+        err.response?.data ||
+          "No se pudieron cargar los datos del dashboard."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function loadDashboardData() {
     try {
       setLoading(true);
@@ -128,25 +187,27 @@ export default function DashboardPage() {
     }
   }
 
+  const sourceData = isStudent ? studentData : (isDocente ? docenteData : dashboardData);
+
   const estudiantesFiltrados = useMemo(() => {
-    if (!salonSeleccionado) return dashboardData.estudiantes;
-    return dashboardData.estudiantes.filter(
+    if (!salonSeleccionado) return sourceData.estudiantes || [];
+    return (sourceData.estudiantes || []).filter(
       (e) => e.salon?.id?.toString() === salonSeleccionado
     );
-  }, [dashboardData.estudiantes, salonSeleccionado]);
+  }, [sourceData.estudiantes, salonSeleccionado]);
 
   const notasFiltradas = useMemo(() => {
     if (isStudent) return studentData.notas;
-    if (!salonSeleccionado) return dashboardData.notas;
-    return dashboardData.notas.filter(
+    if (!salonSeleccionado) return sourceData.notas || [];
+    return (sourceData.notas || []).filter(
       (nota) =>
         nota.estudiante?.salon?.id?.toString() === salonSeleccionado
     );
-  }, [isStudent, studentData.notas, dashboardData.notas, salonSeleccionado]);
+  }, [isStudent, studentData.notas, sourceData.notas, salonSeleccionado]);
 
   const analytics = useMemo(() => {
-    const cursos = isStudent ? studentData.cursos : dashboardData.cursos;
-    const evaluaciones = isStudent ? studentData.evaluaciones : dashboardData.evaluaciones;
+    const cursos = sourceData.cursos || [];
+    const evaluaciones = sourceData.evaluaciones || [];
 
     const courseAverageData = getCourseAverageData(cursos, notasFiltradas);
     const gradeDistributionData = getGradeDistributionData(notasFiltradas);
@@ -161,7 +222,7 @@ export default function DashboardPage() {
       porcentajeAprobados,
       recentEvaluations,
     };
-  }, [isStudent, studentData, dashboardData, notasFiltradas]);
+  }, [sourceData, notasFiltradas]);
 
   if (loading) {
     return <LoadingScreen message="Cargando dashboard académico..." />;
@@ -197,7 +258,7 @@ export default function DashboardPage() {
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             title="Cursos activos"
-            value={dashboardData.cursos.length}
+            value={(sourceData.cursos || []).length}
             description="Cursos registrados en la plataforma"
             icon={FiBookOpen}
             iconClassName="bg-blue-100 text-blue-600"
@@ -211,7 +272,7 @@ export default function DashboardPage() {
           />
           <StatCard
             title="Evaluaciones"
-            value={dashboardData.evaluaciones.length}
+            value={(sourceData.evaluaciones || []).length}
             description="Evaluaciones creadas"
             icon={FiClipboard}
             iconClassName="bg-amber-100 text-amber-600"
@@ -244,7 +305,7 @@ export default function DashboardPage() {
           />
           <StatCard
             title="Evaluaciones"
-            value={studentData.evaluaciones.length}
+            value={(sourceData.evaluaciones || []).length}
             description="Evaluaciones disponibles para tu salón"
             icon={FiFileText}
             iconClassName="bg-violet-100 text-violet-600"

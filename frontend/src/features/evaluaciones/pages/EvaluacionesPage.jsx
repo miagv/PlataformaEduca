@@ -8,7 +8,7 @@ import {
 
 import { useAuth } from "../../auth/hooks/useAuth";
 import { ROLES } from "../../../utils/roles";
-import { getSalones } from "../../../api/salonService";
+import { getSalones, getMisSalones } from "../../../api/salonService";
 
 import EvaluacionModal from "../components/EvaluacionModal";
 import EvaluacionesTable from "../components/EvaluacionesTable";
@@ -31,6 +31,7 @@ export default function EvaluacionesPage() {
   const [salones, setSalones] = useState([]);
 
   const [search, setSearch] = useState("");
+  const [cursoFilter, setCursoFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [evaluacionSeleccionada, setEvaluacionSeleccionada] = useState(null);
   const [evaluacionAEliminar, setEvaluacionAEliminar] = useState(null);
@@ -40,23 +41,41 @@ export default function EvaluacionesPage() {
     user?.rol === ROLES.ADMIN || user?.rol === ROLES.DOCENTE;
 
   useEffect(() => {
-    getSalones()
-      .then((data) => setSalones(data))
-      .catch(() => {});
+    const load = user?.rol === ROLES.DOCENTE ? getMisSalones() : getSalones();
+    load.then((data) => setSalones(data)).catch(() => {});
   }, []);
+
+  const cursosUnicos = useMemo(() => {
+    const map = new Map();
+    evaluaciones.forEach((e) => {
+      if (e.curso?.id && e.curso?.nombre) {
+        map.set(e.curso.id, e.curso.nombre);
+      }
+    });
+    return Array.from(map.entries())
+      .map(([id, nombre]) => ({ id, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [evaluaciones]);
 
   const evaluacionesFiltradas = useMemo(() => {
     const term = search.trim().toLowerCase();
 
-    if (!term) return evaluaciones;
+    let result = evaluaciones;
 
-    return evaluaciones.filter((evaluacion) => {
-      const titulo = evaluacion.titulo?.toLowerCase() || "";
-      const curso = evaluacion.curso?.nombre?.toLowerCase() || "";
+    if (term) {
+      result = result.filter((evaluacion) => {
+        const titulo = evaluacion.titulo?.toLowerCase() || "";
+        const curso = evaluacion.curso?.nombre?.toLowerCase() || "";
+        return titulo.includes(term) || curso.includes(term);
+      });
+    }
 
-      return titulo.includes(term) || curso.includes(term);
-    });
-  }, [evaluaciones, search]);
+    if (cursoFilter) {
+      result = result.filter((e) => e.curso?.nombre === cursoFilter);
+    }
+
+    return result;
+  }, [evaluaciones, search, cursoFilter]);
 
   const abrirNuevaEvaluacion = () => {
     setSuccessMessage("");
@@ -212,6 +231,17 @@ export default function EvaluacionesPage() {
             className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
           />
         </div>
+
+        <select
+          value={cursoFilter}
+          onChange={(e) => setCursoFilter(e.target.value)}
+          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-100 sm:w-56"
+        >
+          <option value="">Todos los cursos</option>
+          {cursosUnicos.map((c) => (
+            <option key={c.id} value={c.nombre}>{c.nombre}</option>
+          ))}
+        </select>
 
         <button
           type="button"

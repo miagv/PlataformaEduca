@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import {
   createNota,
   getNotas,
+  getMisNotas,
   getNotasPorEstudiante,
 } from "../services/notaService";
 
-export function useNotas() {
+export function useNotas({ misNotas = false } = {}) {
   const [notas, setNotas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -16,7 +17,7 @@ export function useNotas() {
       setLoading(true);
       setError("");
 
-      const data = await getNotas();
+      const data = misNotas ? await getMisNotas() : await getNotas();
       setNotas(data);
     } catch (err) {
       setError(
@@ -26,7 +27,7 @@ export function useNotas() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [misNotas]);
 
   useEffect(() => {
     cargarNotas();

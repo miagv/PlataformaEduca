@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { FiPlus, FiEdit2, FiTrash2, FiBook, FiUsers, FiBarChart2, FiPrinter, FiChevronLeft, FiDownload } from "react-icons/fi";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { ROLES } from "../../../utils/roles";
-import { getSalones, getMisSalones, createSalon, updateSalon, deleteSalon, getDocentesPorSalon, createCargaHoraria, updateCargaHoraria, deleteCargaHoraria, getReporteSalon } from "../../../api/salonService";
+import { getSalones, getMisSalones, createSalon, updateSalon, deleteSalon, getDocentesPorSalon, createCargaHoraria, updateCargaHoraria, deleteCargaHoraria, getReporteSalon, getReporteMisCursos } from "../../../api/salonService";
 import { getCursos } from "../../cursos/services/cursoService";
 import { getDocentes } from "../../../api/docenteService";
 import { getEstudiantesPorSalon } from "../../estudiantes/services/estudianteService";
@@ -66,7 +66,7 @@ export default function SalonesPage() {
   const cargarReporte = async (salonId) => {
     try {
       setLoadingReporte(true);
-      const data = await getReporteSalon(salonId);
+      const data = isAdmin ? await getReporteSalon(salonId) : await getReporteMisCursos(salonId);
       setReporte(data);
     } catch (err) {
       setReporte(null);

@@ -1,9 +1,7 @@
 package com.example.educacion.controller;
 
-import com.example.educacion.entity.Salon;
-import com.example.educacion.entity.CargaHoraria;
-import com.example.educacion.entity.Curso;
-import com.example.educacion.entity.Docente;
+import com.example.educacion.entity.*;
+import com.example.educacion.repository.*;
 import com.example.educacion.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +27,12 @@ public class SalonController {
 
     @Autowired
     private CursoService cursoService;
+
+    @Autowired
+    private UsuarioRepository usuariORepository;
+
+    @Autowired
+    private DocenteRepository docenteRepository;
 
     @GetMapping
     public ResponseEntity<List<Salon>> listar() {
@@ -86,6 +90,18 @@ public class SalonController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DOCENTE')")
     public ResponseEntity<Map<String, Object>> obtenerReporte(@PathVariable Long id) {
         Map<String, Object> reporte = salonService.obtenerReporte(id);
+        if (reporte == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(reporte);
+    }
+
+    @GetMapping("/{id}/reporte/mis-cursos")
+    public ResponseEntity<Map<String, Object>> obtenerReporteMisCursos(@PathVariable Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Usuario usuario = usuariORepository.findByEmail(email).orElse(null);
+        if (usuario == null) return ResponseEntity.badRequest().build();
+        Docente docente = docenteRepository.findByUsuarioId(usuario.getId()).orElse(null);
+        if (docente == null) return ResponseEntity.badRequest().build();
+        Map<String, Object> reporte = salonService.obtenerReporte(id, docente.getId());
         if (reporte == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(reporte);
     }

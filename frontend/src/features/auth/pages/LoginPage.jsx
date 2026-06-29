@@ -17,13 +17,12 @@ export default function LoginPage() {
           </div>
 
           <h1 className="mt-8 max-w-2xl text-5xl font-bold leading-tight text-white">
-            Transforma el aprendizaje con
-            <span className="block text-[#C8102E]">datos inteligentes.</span>
+          El aprendizaje del futuro
+            <span className="block text-[#C8102E]">garantizado.</span>
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-8 text-blue-200">
-            Plataforma educativa para gestionar cursos, evaluaciones y notas con
-            analítica avanzada de rendimiento académico.
+            Plataforma educativa para gestionar cursos, evaluaciones y notas de rendimiento académico.
           </p>
         </div>
 
@@ -33,7 +32,7 @@ export default function LoginPage() {
               <FiUsers className="text-[#C8102E]" size={22} />
             </div>
             <p className="mt-4 text-xs font-medium text-blue-300">Usuarios</p>
-            <p className="mt-0.5 font-semibold text-white">Roles seguros</p>
+            <p className="mt-0.5 font-semibold text-white">Ingresa tu usuario</p>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
@@ -61,7 +60,7 @@ export default function LoginPage() {
               <span className="h-3 w-3 rounded-full bg-[#C8102E]" />
             </div>
             <p className="text-xs text-blue-300">
-              © 2026 EduAnalytics · Plataforma Educativa del Reino Unido
+              © 2026 Edu · Plataforma Educativa del Reino Unido
             </p>
           </div>
         </div>
@@ -75,8 +74,9 @@ export default function LoginPage() {
             </div>
 
             <h1 className="mt-5 text-3xl font-bold text-[#012169]">
-              EduAnalytics
+              EduTech
             </h1>
+
 
             <p className="mt-1 text-sm text-slate-500">
               Inicia sesión en tu cuenta
@@ -93,7 +93,7 @@ export default function LoginPage() {
               <span className="h-2 w-2 rounded-full bg-[#012169]" />
               <span className="h-2 w-2 rounded-full bg-[#C8102E]" />
             </div>
-            <p className="mt-2">EduAnalytics · Plataforma Educativa</p>
+            <p className="mt-2">EduTech · Plataforma Educativa</p>
           </div>
         </div>
       </section>

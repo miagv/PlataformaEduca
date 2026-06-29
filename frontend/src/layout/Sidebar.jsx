@@ -43,7 +43,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <FiBookOpen size={22} className="text-white" />
             </div>
             <div>
-              <p className="text-base font-bold tracking-tight">EduAnalytics</p>
+              <p className="text-base font-bold tracking-tight">EduTech</p>
               <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-blue-200">
                 Plataforma Educativa
               </p>

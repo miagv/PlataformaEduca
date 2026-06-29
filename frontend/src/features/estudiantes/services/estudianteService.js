@@ -19,3 +19,8 @@ export async function getEstudiante(id) {
   const response = await axiosClient.get(`/estudiantes/${id}`);
   return response.data;
 }
+
+export async function getMisEstudiantes() {
+  const response = await axiosClient.get("/estudiantes/mis-estudiantes");
+  return response.data;
+}

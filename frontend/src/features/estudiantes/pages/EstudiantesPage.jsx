@@ -3,8 +3,10 @@ import { FiPlus, FiRefreshCw, FiSearch, FiUsers, FiUserCheck } from "react-icons
 import { useForm } from "react-hook-form";
 import axiosClient from "../../../api/axiosClient";
 import { registerRequest } from "../../auth/services/authService";
-import { getSalones, getEstudiantesSinSalon, asignarSalonAEstudiante } from "../../../api/salonService";
+import { getSalones, getMisSalones, getEstudiantesSinSalon, asignarSalonAEstudiante } from "../../../api/salonService";
+import { getMisEstudiantes } from "../services/estudianteService";
 import { useAuth } from "../../auth/hooks/useAuth";
+import { ROLES } from "../../../utils/roles";
 
 function EstudianteForm({ estudiante, onClose, onSubmit, loading }) {
   const { register, handleSubmit, formState: { errors } } = useForm({
@@ -57,6 +59,9 @@ function EstudianteForm({ estudiante, onClose, onSubmit, loading }) {
 
 export default function EstudiantesPage() {
   const { user } = useAuth();
+  const isAdmin = user?.rol === ROLES.ADMIN;
+  const isDocente = user?.rol === ROLES.DOCENTE;
+
   const [estudiantes, setEstudiantes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -70,12 +75,19 @@ export default function EstudiantesPage() {
   const [sinSalon, setSinSalon] = useState([]);
   const [salones, setSalones] = useState([]);
   const [asignarModal, setAsignarModal] = useState({ open: false, estudiante: null, salonId: "" });
+  const [salonFilter, setSalonFilter] = useState("");
 
   const cargarEstudiantes = async () => {
     try {
       setLoading(true); setError("");
-      const res = await axiosClient.get("/estudiantes");
-      setEstudiantes(res.data || []);
+      let data;
+      if (isDocente) {
+        data = await getMisEstudiantes();
+      } else {
+        const res = await axiosClient.get("/estudiantes");
+        data = res.data || [];
+      }
+      setEstudiantes(data);
     } catch (err) {
       setError(err.response?.data || "No se pudieron cargar los estudiantes.");
     } finally { setLoading(false); }
@@ -90,24 +102,33 @@ export default function EstudiantesPage() {
 
   const cargarSalones = async () => {
     try {
-      const data = await getSalones();
+      const data = isAdmin ? await getSalones() : await getMisSalones();
       setSalones(data);
     } catch (_) {}
   };
 
   useEffect(() => {
     cargarEstudiantes();
-    cargarSinSalon();
+    if (isAdmin) cargarSinSalon();
     cargarSalones();
   }, []);
 
   const filtrados = useMemo(() => {
     const term = search.toLowerCase().trim();
-    if (!term) return estudiantes;
-    return estudiantes.filter((e) =>
-      `${e.usuario?.nombres} ${e.usuario?.apellidos} ${e.codigo}`.toLowerCase().includes(term)
-    );
-  }, [estudiantes, search]);
+    let result = estudiantes;
+
+    if (term) {
+      result = result.filter((e) =>
+        `${e.usuario?.nombres} ${e.usuario?.apellidos} ${e.codigo}`.toLowerCase().includes(term)
+      );
+    }
+
+    if (salonFilter) {
+      result = result.filter((e) => e.salon?.id === parseInt(salonFilter));
+    }
+
+    return result;
+  }, [estudiantes, search, salonFilter]);
 
   const abrirNuevo = () => { setSuccessMessage(""); setEstudianteSeleccionado(null); setModalOpen(true); };
   const cerrarModal = () => { if (actionLoading) return; setModalOpen(false); setEstudianteSeleccionado(null); };
@@ -124,7 +145,7 @@ export default function EstudiantesPage() {
       }
       cerrarModal();
       cargarEstudiantes();
-      cargarSinSalon();
+      if (isAdmin) cargarSinSalon();
     } catch (err) {
       setError(err.response?.data || "Error al guardar.");
     } finally { setActionLoading(false); }
@@ -162,7 +183,7 @@ export default function EstudiantesPage() {
     } finally { setActionLoading(false); }
   };
 
-  const showData = activeTab === "todos" ? filtrados : sinSalon;
+  const showData = isAdmin && activeTab === "sinSalon" ? sinSalon : filtrados;
 
   return (
     <section>
@@ -174,32 +195,48 @@ export default function EstudiantesPage() {
             <p className="mt-1 text-slate-600">Administra los estudiantes registrados en la plataforma.</p>
           </div>
         </div>
-        <button onClick={abrirNuevo} className="inline-flex items-center gap-2 rounded-xl bg-[#012169] px-5 py-3 font-semibold text-white hover:bg-blue-900">
-          <FiPlus size={20} /> Nuevo estudiante
-        </button>
+        {isAdmin && (
+          <button onClick={abrirNuevo} className="inline-flex items-center gap-2 rounded-xl bg-[#012169] px-5 py-3 font-semibold text-white hover:bg-blue-900">
+            <FiPlus size={20} /> Nuevo estudiante
+          </button>
+        )}
       </div>
 
       {successMessage && <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{successMessage}</div>}
       {error && <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
 
-      {/* Tabs */}
-      <div className="mt-6 flex gap-1 rounded-2xl bg-white p-1 shadow-sm ring-1 ring-slate-200">
-        <button onClick={() => setActiveTab("todos")} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition ${activeTab === "todos" ? "bg-[#012169] text-white" : "text-slate-500 hover:bg-slate-100"}`}>
-          <FiUserCheck size={16} /> Todos ({estudiantes.length})
-        </button>
-        <button onClick={() => { setActiveTab("sinSalon"); cargarSinSalon(); }} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition ${activeTab === "sinSalon" ? "bg-[#012169] text-white" : "text-slate-500 hover:bg-slate-100"}`}>
-          <FiUsers size={16} /> Nuevos sin salón ({sinSalon.length})
-        </button>
-      </div>
+      {/* Tabs — only for ADMIN */}
+      {isAdmin && (
+        <div className="mt-6 flex gap-1 rounded-2xl bg-white p-1 shadow-sm ring-1 ring-slate-200">
+          <button onClick={() => setActiveTab("todos")} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition ${activeTab === "todos" ? "bg-[#012169] text-white" : "text-slate-500 hover:bg-slate-100"}`}>
+            <FiUserCheck size={16} /> Todos ({estudiantes.length})
+          </button>
+          <button onClick={() => { setActiveTab("sinSalon"); cargarSinSalon(); }} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition ${activeTab === "sinSalon" ? "bg-[#012169] text-white" : "text-slate-500 hover:bg-slate-100"}`}>
+            <FiUsers size={16} /> Nuevos sin salón ({sinSalon.length})
+          </button>
+        </div>
+      )}
 
       <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-md">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar estudiante..." className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 outline-none transition focus:border-[#012169] focus:ring-4 focus:ring-blue-100" />
         </div>
-        <button onClick={cargarEstudiantes} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 hover:bg-slate-100">
-          <FiRefreshCw className={loading ? "animate-spin" : ""} size={18} /> Actualizar
-        </button>
+        <div className="flex items-center gap-2">
+          <select
+            value={salonFilter}
+            onChange={(e) => setSalonFilter(e.target.value)}
+            className="rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#012169] focus:ring-4 focus:ring-blue-100"
+          >
+            <option value="">Todos los salones</option>
+            {salones.map((s) => (
+              <option key={s.id} value={s.id}>{s.grado} &quot;{s.seccion}&quot;</option>
+            ))}
+          </select>
+          <button onClick={cargarEstudiantes} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 hover:bg-slate-100">
+            <FiRefreshCw className={loading ? "animate-spin" : ""} size={18} /> Actualizar
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -218,7 +255,7 @@ export default function EstudiantesPage() {
             <tbody className="divide-y divide-slate-100">
               {showData.length === 0 ? (
                 <tr><td colSpan="6" className="px-6 py-8 text-center text-sm text-slate-500">
-                  {activeTab === "todos" ? "No hay estudiantes registrados." : "No hay estudiantes sin salón."}
+                  {isAdmin && activeTab === "todos" ? "No hay estudiantes registrados." : isAdmin && activeTab === "sinSalon" ? "No hay estudiantes sin salón." : "No hay estudiantes en tus salones."}
                 </td></tr>
               ) : (
                 showData.map((est) => (
@@ -237,14 +274,16 @@ export default function EstudiantesPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {!est.salon && activeTab === "sinSalon" && (
+                      {!est.salon && isAdmin && activeTab === "sinSalon" && (
                         <button onClick={() => abrirAsignar(est)} disabled={actionLoading} className="rounded-lg bg-[#012169]/10 px-3 py-1.5 mr-2 text-sm font-semibold text-[#012169] hover:bg-[#012169]/20 disabled:opacity-50">
                           Asignar salón
                         </button>
                       )}
-                      <button onClick={() => handleEliminar(est.id)} disabled={actionLoading} className="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50">
-                        Eliminar
-                      </button>
+                      {isAdmin && (
+                        <button onClick={() => handleEliminar(est.id)} disabled={actionLoading} className="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50">
+                          Eliminar
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

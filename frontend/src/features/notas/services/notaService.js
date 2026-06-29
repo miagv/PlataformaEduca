@@ -14,3 +14,18 @@ export async function createNota(nota) {
   const response = await axiosClient.post("/notas", nota);
   return response.data;
 }
+
+export async function getMisNotas() {
+  const response = await axiosClient.get("/notas/mis-notas");
+  return response.data;
+}
+
+export async function updateNota(id, nota) {
+  const response = await axiosClient.put(`/notas/${id}`, nota);
+  return response.data;
+}
+
+export async function deleteNota(id) {
+  const response = await axiosClient.delete(`/notas/${id}`);
+  return response.data;
+}

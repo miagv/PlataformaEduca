@@ -1,17 +1,27 @@
 package com.example.educacion.service;
 
-import com.example.educacion.entity.Estudiante;
-import com.example.educacion.repository.EstudianteRepository;
+import com.example.educacion.entity.*;
+import com.example.educacion.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EstudianteService {
 
     @Autowired
     private EstudianteRepository estudianteRepository;
+
+    @Autowired
+    private UsuarioRepository usuariORepository;
+
+    @Autowired
+    private DocenteRepository docenteRepository;
+
+    @Autowired
+    private CargaHorariaRepository cargaHorariaRepository;
 
     public List<Estudiante> listar() {
         return estudianteRepository.findAll();
@@ -23,6 +33,20 @@ public class EstudianteService {
 
     public List<Estudiante> listarSinSalon() {
         return estudianteRepository.findBySalonIsNull();
+    }
+
+    public List<Estudiante> listarMisEstudiantes(String email) {
+        Usuario usuario = usuariORepository.findByEmail(email).orElse(null);
+        if (usuario == null) return List.of();
+        Docente docente = docenteRepository.findByUsuarioId(usuario.getId()).orElse(null);
+        if (docente == null) return List.of();
+        List<Long> salonIds = cargaHorariaRepository.findByDocenteId(docente.getId())
+                .stream()
+                .map(ch -> ch.getSalon().getId())
+                .distinct()
+                .collect(Collectors.toList());
+        if (salonIds.isEmpty()) return List.of();
+        return estudianteRepository.findBySalonIdIn(salonIds);
     }
 
     public Estudiante guardar(Estudiante estudiante) {

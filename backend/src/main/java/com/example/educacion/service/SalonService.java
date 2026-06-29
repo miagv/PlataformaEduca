@@ -96,15 +96,55 @@ public class SalonService {
     }
 
     public Map<String, Object> obtenerReporte(Long salonId) {
+        return buildReporte(salonId, null);
+    }
+
+    public Map<String, Object> obtenerReporte(Long salonId, Long docenteId) {
+        return buildReporte(salonId, docenteId);
+    }
+
+    private Map<String, Object> buildReporte(Long salonId, Long docenteId) {
         Salon salon = buscar(salonId);
         if (salon == null) return null;
 
         List<Estudiante> estudiantes = estudianteRepository.findBySalonId(salonId);
-        List<Map<String, Object>> docentes = obtenerDocentesConHoras(salonId);
 
+        // Determine which cursos to filter by (if docenteId provided)
+        final List<Long> cursoIdsFilter;
+        if (docenteId != null) {
+            List<Long> ids = cargaHorariaRepository.findBySalonIdAndDocenteId(salonId, docenteId)
+                    .stream()
+                    .map(ch -> ch.getCurso().getId())
+                    .distinct()
+                    .collect(Collectors.toList());
+            cursoIdsFilter = ids.isEmpty() ? null : ids;
+        } else {
+            cursoIdsFilter = null;
+        }
+
+        final Long docId = docenteId;
+
+        // Filter docentes list
+        List<Map<String, Object>> docentes = obtenerDocentesConHoras(salonId);
+        if (docId != null) {
+            docentes = docentes.stream()
+                    .filter(d -> {
+                        Map<String, Object> docenteMap = (Map<String, Object>) d.get("docente");
+                        return docenteMap != null && docId.equals(docenteMap.get("id"));
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Collect notas, optionally filtered by cursoIds
         List<Nota> todasNotas = new ArrayList<>();
         for (Estudiante e : estudiantes) {
-            todasNotas.addAll(notaRepository.buscarPorEstudiante(e.getId()));
+            List<Nota> notasEst = notaRepository.buscarPorEstudiante(e.getId());
+            if (cursoIdsFilter != null) {
+                notasEst = notasEst.stream()
+                        .filter(n -> cursoIdsFilter.contains(n.getEvaluacion().getCurso().getId()))
+                        .collect(Collectors.toList());
+            }
+            todasNotas.addAll(notasEst);
         }
 
         double promedioGeneral = todasNotas.stream()
