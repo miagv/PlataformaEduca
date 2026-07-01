@@ -17,6 +17,7 @@ import EvaluacionesPage from "../features/evaluaciones/pages/EvaluacionesPage";
 import NotasPage from "../features/notas/pages/NotasPage";
 import ReportesPage from "../features/reportes/pages/ReportesPage";
 import SalonesPage from "../features/salones/pages/SalonesPage";
+import AsistenciasPage from "../features/asistencias/pages/AsistenciasPage";
 import CoordinadoresPage from "../features/coordinadores/pages/CoordinadoresPage";
 
 import ComingSoonPage from "../features/shared/pages/ComingSoonPage";
@@ -49,6 +50,7 @@ const router = createBrowserRouter([
               { path: "/reportes", element: <ReportesPage /> },
               { path: "/salones", element: <SalonesPage /> },
               { path: "/estudiantes", element: <EstudiantesPage /> },
+              { path: "/asistencias", element: <AsistenciasPage /> },
             ],
           },
 

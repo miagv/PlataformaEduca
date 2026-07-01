@@ -8,10 +8,13 @@ import { getMisEstudiantes } from "../services/estudianteService";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { ROLES } from "../../../utils/roles";
 
+const GRADOS = ["1ro", "2do", "3ro", "4to", "5to", "6to"];
+
 function EstudianteForm({ estudiante, onClose, onSubmit, loading }) {
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       codigo: estudiante?.codigo || "",
+      grado: estudiante?.grado || "",
       usuario: {
         nombres: estudiante?.usuario?.nombres || "",
         apellidos: estudiante?.usuario?.apellidos || "",
@@ -45,6 +48,16 @@ function EstudianteForm({ estudiante, onClose, onSubmit, loading }) {
           <label className="mb-1 block text-sm font-semibold text-slate-700">Contraseña</label>
           <input type="password" className={`w-full rounded-xl border py-2.5 px-4 outline-none transition focus:ring-4 ${errors.usuario?.password ? "border-red-400 focus:ring-red-100" : "border-slate-300 focus:border-[#012169] focus:ring-blue-100"}`}
             {...register("usuario.password", { required: "Campo obligatorio", minLength: { value: 6, message: "Mínimo 6 caracteres" } })} />
+        </div>
+      )}
+      {!estudiante && (
+        <div>
+          <label className="mb-1 block text-sm font-semibold text-slate-700">Grado</label>
+          <select className={`w-full rounded-xl border py-2.5 px-4 outline-none transition focus:ring-4 ${errors.grado ? "border-red-400 focus:ring-red-100" : "border-slate-300 focus:border-[#012169] focus:ring-blue-100"}`}
+            {...register("grado", { required: "Campo obligatorio" })}>
+            <option value="">Seleccionar grado</option>
+            {GRADOS.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
         </div>
       )}
       <div className="flex justify-end gap-3 pt-2">
@@ -140,7 +153,7 @@ export default function EstudiantesPage() {
         await axiosClient.put(`/estudiantes/${estudianteSeleccionado.id}`, data);
         setSuccessMessage("Estudiante actualizado.");
       } else {
-        await registerRequest({ ...data.usuario, rol: "ESTUDIANTE" });
+        await registerRequest({ ...data.usuario, rol: "ESTUDIANTE", grado: data.grado });
         setSuccessMessage("Estudiante creado.");
       }
       cerrarModal();
@@ -270,7 +283,7 @@ export default function EstudiantesPage() {
                           {est.salon.grado} "{est.salon.seccion}"
                         </span>
                       ) : (
-                        <span className="text-xs text-slate-400">Sin salón</span>
+                        <span className="text-xs text-slate-400">A la espera de asignación</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -307,7 +320,11 @@ export default function EstudiantesPage() {
       {asignarModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setAsignarModal({ ...asignarModal, open: false })}>
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Asignar salón a {asignarModal.estudiante.usuario?.nombres}</h3>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">Asignar salón</h3>
+            <p className="text-sm text-slate-500 mb-4">
+              Estudiante: {asignarModal.estudiante.usuario?.nombres} {asignarModal.estudiante.usuario?.apellidos}
+              {asignarModal.estudiante.grado && <span> — Grado: <strong>{asignarModal.estudiante.grado}</strong></span>}
+            </p>
             <div className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-slate-700">Salón</label>
@@ -317,7 +334,7 @@ export default function EstudiantesPage() {
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#012169] focus:ring-4 focus:ring-blue-100"
                 >
                   <option value="">Seleccionar salón</option>
-                  {salones.map((s) => (
+                  {salones.filter((s) => s.grado === asignarModal.estudiante.grado).map((s) => (
                     <option key={s.id} value={s.id}>{s.grado} &quot;{s.seccion}&quot;</option>
                   ))}
                 </select>

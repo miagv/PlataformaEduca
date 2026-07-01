@@ -59,6 +59,7 @@ public class AuthService {
             Estudiante estudiante = new Estudiante();
             estudiante.setUsuario(usuarioGuardado);
             estudiante.setCodigo("EST-" + usuarioGuardado.getId());
+            estudiante.setGrado(request.getGrado());
             estudianteRepository.save(estudiante);
         } else if ("DOCENTE".equals(request.getRol())) {
             Docente docente = new Docente();

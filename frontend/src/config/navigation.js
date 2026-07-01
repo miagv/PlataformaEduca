@@ -9,6 +9,7 @@ import {
   FiUsers,
   FiGrid,
   FiShield,
+  FiCalendar,
 } from "react-icons/fi";
 
 import { ROLES } from "../utils/roles";
@@ -61,6 +62,12 @@ export const navigationItems = [
     path: "/coordinadores",
     icon: FiShield,
     roles: [ROLES.ADMIN],
+  },
+  {
+    label: "Control de asistencia",
+    path: "/asistencias",
+    icon: FiCalendar,
+    roles: [ROLES.ADMIN, ROLES.DOCENTE],
   },
   {
     label: "Reportes",

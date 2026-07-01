@@ -28,6 +28,8 @@ public class Estudiante {
     @JsonIgnore
     private List<Nota> notas;
 
+    private String grado;
+
     @ManyToOne
     @JoinColumn(name = "salon_id")
     private Salon salon;
